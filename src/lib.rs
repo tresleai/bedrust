@@ -239,12 +239,12 @@ fn q_to_bcs_with_defaults(
             })
         }
         "anthropic.claude-3-sonnet-20240229-v1:0" => {
-            let claude_image: Option<ClaudeImageSource> = if image.is_some() {
-                Some(ClaudeImageSource {
+            let claude_images: Option<Vec<ClaudeImageSource>> = if image.is_some() {
+                Some(vec![ClaudeImageSource {
                     image_type: "base64".to_string(),
                     data: image.as_ref().unwrap().base64.clone(),
                     media_type: format!("image/{}", image.as_ref().unwrap().extension),
-                })
+                }])
             } else {
                 None
             };
@@ -255,7 +255,7 @@ fn q_to_bcs_with_defaults(
                 d.role,
                 d.default_content_type,
                 question,
-                claude_image,
+                claude_images,
             );
             Ok(BedrockCallSum::Claude3BCS {
                 model_id: String::from("anthropic.claude-3-sonnet-20240229-v1:0"),
@@ -263,12 +263,12 @@ fn q_to_bcs_with_defaults(
             })
         }
         "anthropic.claude-3-haiku-20240307-v1:0" => {
-            let claude_image: Option<ClaudeImageSource> = if image.is_some() {
-                Some(ClaudeImageSource {
+            let claude_images: Option<Vec<ClaudeImageSource>> = if image.is_some() {
+                Some(vec![ClaudeImageSource {
                     image_type: "base64".to_string(),
                     data: image.as_ref().unwrap().base64.clone(),
                     media_type: format!("image/{}", image.as_ref().unwrap().extension),
-                })
+                }])
             } else {
                 None
             };
@@ -279,7 +279,7 @@ fn q_to_bcs_with_defaults(
                 d.role,
                 d.default_content_type,
                 question,
-                claude_image,
+                claude_images,
             );
             Ok(BedrockCallSum::Claude3BCS {
                 model_id: String::from("anthropic.claude-3-haiku-20240307-v1:0"),

@@ -102,7 +102,7 @@ impl ClaudeV3Body {
         role: String,
         _content_type: String,
         text: Option<String>,
-        image_source: Option<ClaudeImageSource>,
+        image_sources: Option<Vec<ClaudeImageSource>>,
     ) -> ClaudeV3Body {
         let mut content = Vec::new();
         let text_content = text.map(|t| ClaudeV3TextContent {
@@ -111,12 +111,17 @@ impl ClaudeV3Body {
         });
         content.push(ClaudeV3ContentEnum::TextContent(text_content.unwrap()));
 
-        if image_source.is_some() {
-            let image_content = image_source.map(|source| ClaudeV3ImageContent {
-                content_type: "image".to_string(),
-                source: Some(source),
-            });
-            content.push(ClaudeV3ContentEnum::ImageContent(image_content.unwrap()));
+        match image_sources {
+            Some(images) => {
+                for image in images {
+                    let image_content = ClaudeV3ImageContent {
+                        content_type: "image".to_string(),
+                        source: Some(image),
+                    };
+                    content.push(ClaudeV3ContentEnum::ImageContent(image_content));
+                }
+            }
+            None => {}
         }
         let message = ClaudeV3Message {
             role,
