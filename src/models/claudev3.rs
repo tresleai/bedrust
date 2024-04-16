@@ -1,5 +1,3 @@
-use anyhow::Result;
-use aws_sdk_bedrockruntime::primitives::Blob;
 use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
 #[derive(Debug)]
@@ -132,12 +130,6 @@ impl ClaudeV3Body {
             max_tokens,
             messages: vec![message],
         }
-    }
-
-    pub fn convert_to_blob(&self) -> Result<Blob> {
-        let blob_string = serde_json::to_vec(&self)?;
-        let body: Blob = Blob::new(blob_string.clone());
-        Ok(body)
     }
 }
 
