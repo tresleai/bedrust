@@ -240,6 +240,9 @@ fn convert_question_to_model_options(
             let claudev3_body = ClaudeV3Body::new(
                 d.anthropic_version,
                 d.max_tokens,
+                d.temperature,
+                d.top_p,
+                d.top_k,
                 d.role,
                 d.default_content_type,
                 question,
@@ -264,6 +267,9 @@ fn convert_question_to_model_options(
             let claudev3_body = ClaudeV3Body::new(
                 d.anthropic_version,
                 d.max_tokens,
+                d.temperature,
+                d.top_p,
+                d.top_k,
                 d.role,
                 d.default_content_type,
                 question,

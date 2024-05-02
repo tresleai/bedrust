@@ -41,6 +41,9 @@ impl Serialize for ClaudeV3ContentEnum {
 pub struct ClaudeV3Config {
     pub anthropic_version: String,
     pub max_tokens: i32,
+    pub temperature: f32,
+    pub top_p: f32,
+    pub top_k: i32,
     pub role: String,
     #[serde(rename = "type")]
     pub default_content_type: String,
@@ -50,6 +53,9 @@ pub struct ClaudeV3Config {
 pub struct ClaudeV3Body {
     pub anthropic_version: String,
     pub max_tokens: i32,
+    pub temperature: f32,
+    pub top_p: f32,
+    pub top_k: i32,
     pub messages: Vec<ClaudeV3Message>,
 }
 
@@ -97,6 +103,9 @@ impl ClaudeV3Body {
     pub fn new(
         anthropic_version: String,
         max_tokens: i32,
+        temperature: f32,
+        top_p: f32,
+        top_k: i32,
         role: String,
         _content_type: String,
         text: Option<String>,
@@ -127,6 +136,9 @@ impl ClaudeV3Body {
         };
         ClaudeV3Body {
             anthropic_version,
+            temperature,
+            top_p,
+            top_k,
             max_tokens,
             messages: vec![message],
         }
