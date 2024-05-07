@@ -91,7 +91,7 @@ pub struct ClaudeV3ImageContent {
     pub source: Option<ClaudeImageSource>,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct ClaudeImageSource {
     #[serde(rename = "type")]
     pub image_type: String,
