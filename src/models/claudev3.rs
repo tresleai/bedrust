@@ -112,23 +112,22 @@ impl ClaudeV3Body {
         image_sources: Option<Vec<ClaudeImageSource>>,
     ) -> ClaudeV3Body {
         let mut content = Vec::new();
-        let text_content = text.map(|t| ClaudeV3TextContent {
-            content_type: "text".to_string(),
-            text: Some(t),
-        });
-        content.push(ClaudeV3ContentEnum::TextContent(text_content.unwrap()));
+        if text.is_some() {
+            let text_content = ClaudeV3TextContent {
+                content_type: "text".to_string(),
+                text,
+            };
+            content.push(ClaudeV3ContentEnum::TextContent(text_content));
+        }
 
-        match image_sources {
-            Some(images) => {
-                for image in images {
-                    let image_content = ClaudeV3ImageContent {
-                        content_type: "image".to_string(),
-                        source: Some(image),
-                    };
-                    content.push(ClaudeV3ContentEnum::ImageContent(image_content));
-                }
+        if let Some(images) = image_sources {
+            for image in images {
+                let image_content = ClaudeV3ImageContent {
+                    content_type: "image".to_string(),
+                    source: Some(image),
+                };
+                content.push(ClaudeV3ContentEnum::ImageContent(image_content));
             }
-            None => {}
         }
         let message = ClaudeV3Message {
             role,

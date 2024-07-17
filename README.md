@@ -14,7 +14,7 @@ Currently supporting the following models:
 - Cohere Command
 - Jurrasic 2 Ultra
 - Titan Text Express V1
-- Mistral AI models (Mixtral and Mistral)
+- Mistral AI models (Mixtral, Mistral7b and Mistral Large)
 
 ## Getting Started
 
@@ -89,7 +89,7 @@ Usage: bedrust [OPTIONS] --model-id <MODEL_ID>
 
 Options:
       --init
-  -m, --model-id <MODEL_ID>  [possible values: llama270b, cohere-command, claude-v2, claude-v21, claude-v3-sonnet, claude-v3-haiku, jurrasic2-ultra, titan-text-express-v1, mixtral8x7b-instruct, mistral7b-instruct]
+  -m, --model-id <MODEL_ID>  [possible values: llama270b, cohere-command, claude-v2, claude-v21, claude-v3-sonnet, claude-v3-haiku, jurrasic2-ultra, titan-text-express-v1, mixtral8x7b-instruct, mistral7b-instruct, mistral-large]
   -c, --caption <CAPTION>
   -x
   -h, --help                 Print help
@@ -150,4 +150,5 @@ They *need* to be in your `$HOME/.config/bedrust/` directory. The application wi
 - [ ] Code Testing
 - [ ] Ability to generate images
 - [x] Make it prettier
-- [ ] Handle long pastes better
+- [ ] Handle long pastes Better
+- [x] Bedder credential handling
