@@ -99,6 +99,7 @@ pub struct ClaudeImageSource {
     pub data: String,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl ClaudeV3Body {
     pub fn new(
         anthropic_version: String,
