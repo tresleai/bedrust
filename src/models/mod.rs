@@ -1,17 +1,3 @@
-pub mod claudev3;
-pub mod cohere;
-pub mod converse;
-
-use claudev3::ClaudeV3Config;
-use cohere::CohereCommandConfig;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ModelConfigs {
-    pub cohere_command: CohereCommandConfig,
-    pub claude_v3: ClaudeV3Config,
-}
-
 use anyhow::{anyhow, Result};
 use aws_sdk_bedrock::{
     self,
