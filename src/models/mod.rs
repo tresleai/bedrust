@@ -1,29 +1,83 @@
-pub mod claude;
 pub mod claudev3;
 pub mod cohere;
-pub mod jurrasic2;
-pub mod llama2;
-pub mod mistral;
-pub mod titan;
-use claude::{ClaudeV21Config, ClaudeV2Config};
+pub mod converse;
+
 use claudev3::ClaudeV3Config;
 use cohere::CohereCommandConfig;
-use jurrasic2::Jurrasic2UltraConfig;
-use llama2::Llama270bConfig;
-use mistral::{Mistral7bInstruct, MistralLarge, Mixtral8x7bInstruct};
 use serde::{Deserialize, Serialize};
-use titan::TitanTextExpressV1Config;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ModelConfigs {
-    pub llama270b: Llama270bConfig,
     pub cohere_command: CohereCommandConfig,
-    pub claude_v2: ClaudeV2Config,
-    pub claude_v21: ClaudeV21Config,
     pub claude_v3: ClaudeV3Config,
-    pub jurrasic_2_ultra: Jurrasic2UltraConfig,
-    pub titan_text_express_v1: TitanTextExpressV1Config,
-    pub mixtral_8x7b_instruct: Mixtral8x7bInstruct,
-    pub mistral_7b_instruct: Mistral7bInstruct,
-    pub mistral_large: MistralLarge,
+}
+
+use anyhow::{anyhow, Result};
+use aws_sdk_bedrock::{
+    self,
+    types::{FoundationModelDetails, ModelModality},
+};
+
+pub enum ModelFeatures {
+    Streaming,
+    Images,
+}
+
+pub async fn check_for_streaming(
+    m: String,
+    c: &aws_sdk_bedrock::Client,
+) -> Result<bool, anyhow::Error> {
+    let call = c.get_foundation_model().model_identifier(m);
+    let res = call.send().await;
+    let model_details: FoundationModelDetails = res?
+        .model_details()
+        .ok_or_else(|| anyhow!("Unable to get model details"))?
+        .clone();
+
+    match model_details.response_streaming_supported {
+        Some(o) => Ok(o),
+        None => Ok(false),
+    }
+}
+
+pub async fn check_model_features(
+    m: &str,
+    c: &aws_sdk_bedrock::Client,
+    feature: ModelFeatures,
+) -> Result<bool, anyhow::Error> {
+    // FIX: TEMPORARY SOLUTION DUE TO CROSS REGION INFERENCE
+    // The issue here is that the converse model requires the `us.` in front of the nova models due
+    // to cross-region inference. But the get_foundation_model method needs the actual model id. So
+    // we are just hardcoding this in.
+    // PLEASE FIX THIS FUTURE DARKO
+    let model_id = match m {
+        "us.amazon.nova-micro-v1:0" => "amazon.nova-micro-v1:0",
+        "us.amazon.nova-lite-v1:0" => "amazon.nova-lite-v1:0",
+        "us.amazon.nova-pro-v1:0" => "amazon.nova-pro-v1:0",
+        _ => m,
+    };
+
+    let call = c.get_foundation_model().model_identifier(model_id);
+    let res = call.send().await;
+    let model_details: FoundationModelDetails = res?
+        .model_details()
+        .ok_or_else(|| anyhow!("Unable to get model details"))?
+        .clone();
+
+    match feature {
+        ModelFeatures::Images => match model_details.input_modalities {
+            Some(o) => {
+                if o.contains(&ModelModality::Image) {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            None => Ok(false),
+        },
+        ModelFeatures::Streaming => match model_details.response_streaming_supported {
+            Some(o) => Ok(o),
+            None => Ok(false),
+        },
+    }
 }

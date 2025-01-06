@@ -1,9 +1,12 @@
 // This file contains constants (duh)
+use aws_sdk_bedrockruntime::types::InferenceConfiguration;
+use lazy_static::lazy_static;
 
 // PROMPTS
+// TODO: Move this to a Systemprompt
 pub static CODE_CHAT_PROMPT: &str = r#"
 You are my coding assistant and an expert in all things coding.
-I have some code files that I'd like to discuss with you. Each file is provided in the following format:
+I have some code files that I'd like to discuss with you. The entire code base will be enclosed in <SOURCE_CODE_BEDRUST>. XML tags Each file is provided in the following format:
 \n<filename>filename</filename>\n<file_contents>filecontents</file_contents>
 
 Please prepare to analyze the provided code, keeping in mind the following objectives for future questions:
@@ -12,9 +15,17 @@ Please prepare to analyze the provided code, keeping in mind the following objec
 3. **Best Practices**: Evaluate whether the code follows best practices in terms of style, structure, and design patterns. Be ready to recommend any changes that could enhance the code quality.
 4. **Specific Questions**: I will have specific questions related to certain parts of the code. Please be prepared to provide detailed answers and examples if needed. Those questions will come after you have been provided the files.
 
+Think about your answer, and ask questions for clarification if needed.
+
+At the end there will an initial user question inside the <question></question> tags.
+
 Here are the files:
+<SOURCE_CODE_BEDRUST>{SOURCE_CODE}</SOURCE_CODE_BEDRUST>
 "#;
 
+// NOTE: When using Claude you can use the Agent prompt to just finalize the array - Thank you
+// Thiago <3
+// This means I can start an array and it should finish it for me
 pub static PROJECT_GUESS_PROMPT: &str = r#"
 You are helping me figure out what kind of software development projects people are working on. To figure this out, you will look at a file structure of a directory and return to me an array of important file names related to that project type. You will only respond with that array and nothing else. Only return file types that are text files (do not return file types that are images or binaries)
 
@@ -24,8 +35,45 @@ Here is the example of such an array:
 Give me an array of important files for a project type that has the following directory items:
 "#;
 
+pub static CONVERSATION_TITLE_PROMPT: &str = r#"This is a conversation history between a human user and a large language model. Generate only a concise 4-6 word title for the following conversation history. The history is enclosed in the <CONVERSATON_HISTORY> tags. The title should use underscores instead of spaces, and be all in lowercase. Only characters allowed are text characters, numbers and underscore (_). Do not provide any additional text or explanation.
+
+<CONVERSATON_HISTORY>
+{}
+</CONVERSATON_HISTORY>
+
+Title:"#;
+
+pub static CONVERSATION_SUMMARY_PROMPT: &str = r#"This is a conversation history from a human user and a large language model. Summarize the key points of the following conversation in a single, cohesive paragraph. The conversation is enclosed in the <CONVERSATON_HISTORY> tags. Do not use bullet points or numbered lists. Focus on the main topics discussed and any conclusions reached. Keep the summary concise, between 3-5 sentences. Provide only the summary paragraph, without any introductory phrases or explanations.
+
+<CONVERSATON_HISTORY>
+{}
+</CONVERSATON_HISTORY>
+
+Summary:"#;
+
+// INFERENCE CONSTANTS
+lazy_static! {
+    pub static ref CONVERSATION_HISTORY_INF_PARAMS: InferenceConfiguration =
+        InferenceConfiguration::builder()
+            .max_tokens(256)
+            .top_p(0.8)
+            .temperature(0.2)
+            .build();
+}
+
+lazy_static! {
+    pub static ref CONVERSATION_HISTORY_TITLE_INF_PARAMS: InferenceConfiguration =
+        InferenceConfiguration::builder()
+            .max_tokens(32)
+            .top_p(0.8)
+            .temperature(0.2)
+            .build();
+}
+
 // HELPER CONSTANTS
-pub static PROJECT_GUESS_MODEL_ID: &str = "anthropic.claude-3-sonnet-20240229-v1:0";
+// FIX: the model id is hardcoded, we need to make this configurable
+pub static PROJECT_GUESS_MODEL_ID: &str = "anthropic.claude-3-haiku-20240307-v1:0";
+pub static CONVERSATION_HISTORY_MODEL_ID: &str = "anthropic.claude-3-haiku-20240307-v1:0";
 pub static CODE_IGNORE_DIRS: &[&str] = &[
     // Rust
     "target",
@@ -72,78 +120,7 @@ pub static CONFIG_DIR_NAME: &str = "bedrust";
 pub static MODEL_CONFIG_FILE_NAME: &str = "model_config.ron";
 pub static BEDRUST_CONFIG_FILE_NAME: &str = "bedrust_config.ron";
 
-// UPDATED: 2024-04-20
-pub static MODEL_CONFIG_FILE: &str = r#"ModelConfigs(
-  llama270b: (
-    temperature: 1, 
-    p: 0.1,
-    max_gen_len: 1024,
-  ),
-  cohere_command:(
-      max_tokens: 500,
-      temperature: 1.0,
-      p: 0.1,
-      k: 1,
-      stop_sequences: [],
-      stream: true,
-  ),
-  claude_v2:(
-      temperature: 1.0,
-      p: 1.0,
-      k: 250,
-      max_tokens_to_sample: 500,
-      stop_sequences: [],
-  ),
-  claude_v21:(
-      temperature: 1.0,
-      p: 1.0,
-      k: 250,
-      max_tokens_to_sample: 500,
-      stop_sequences: [],
-  ),
- claude_v3:(
-      anthropic_version: "bedrock-2023-05-31",
-      max_tokens: 2048,
-      role: "user",
-      type: "text",
-  ),
-  jurrasic_2_ultra:(
-      temperature: 0.7,
-      top_p: 1,
-      max_tokens: 200,
-      stop_sequences: [],
-  ),
-  titan_text_express_v1:(
-      temperature: 0,
-      top_p: 1,
-      max_token_count: 8192,
-      stop_sequences: [],
-  ),
-  mixtral_8x7b_instruct:(
-      temperature: 0.5,
-      top_p: 0.9,
-      top_k: 200,
-      max_tokens: 1024,
-      stop: [],
-  ),
-  mistral_7b_instruct:(
-      temperature: 0.5,
-      top_p: 0.9,
-      top_k: 200,
-      max_tokens: 1024,
-      stop: [],
-  ),
-  mistral_large:(
-      temperature: 0.5,
-      top_p: 0.9,
-      top_k: 200,
-      max_tokens: 1024,
-      stop: [],
-  )
-)
-"#;
-
-// UPDATED: 2024-03-30
+// UPDATED: 2024-08-02
 pub static BEDRUST_CONFIG_FILE: &str = r#"BedrustConfig(
   // define what AWS profile to use
   aws_profile: "default",
@@ -152,9 +129,17 @@ pub static BEDRUST_CONFIG_FILE: &str = r#"BedrustConfig(
   // the prompt being used for image captioning
   caption_prompt: "Please caption the following image for the sake of accessibility. Return just the caption, and nothing else. Keep it clean, and under 100 words.",
   // choose to show the big ASCII banner on startup or not
-  show_banner: true
+  show_banner: true,
+  inference_params: (
+    temperature: 0.5,
+    max_tokens: 2048,
+    top_p: 0.8, 
+  ),
 )
 "#;
 // FIGLET FONT
 pub static FIGLET_FONT_FILENAME: &str = "ansishadow.flf";
 pub const FIGLET_FONT: &str = include_str!("../resources/ansishadow.flf");
+
+// HTML TEMPLATE FOR EXPORT - load from resources
+pub static HTML_TW_TEMPLATE: &str = include_str!("../resources/html/export_template.html");

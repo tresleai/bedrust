@@ -4,17 +4,23 @@
 
 A neat way to invoke models on [Amazon Bedrock](https://aws.amazon.com/bedrock/). Written in Rust, and LIVE on [Twitch](https://twitch.tv/ruptwelve).
 
-**NOW WITH CHAT 💬** Yes, you can actually have a conversation with LLMs now🥳! Instead of it being able to just send one question at a time, you can now have contextual conversation with a LLM of your choice. This feature is available since version `0.6.0`.
+> *NEW AS OF 0.8.2* - BETA: You can now export your chat to HTML files. (It will only save them as `conversation.html` in the current directory) 
 
 Currently supporting the following models:
+- Claude 3.5 v2 Sonnet
+- Claude 3.5 Haiku
+- Claude 3.5 Sonnet
 - Claude V2
-- **Claude V3 Sonnet**
-- **Claude V3 Haiku**
+- Claude V3 Sonnet
+- Claude V3 Opus
+- Claude V3 Haiku
 - Llama2 70B
+- LLama3.1 models
 - Cohere Command
 - Jurrasic 2 Ultra
 - Titan Text Express V1
-- Mistral AI models (Mixtral, Mistral7b and Mistral Large)
+- Mistral AI models (Mixtral, Mistral7b and Mistral Large 1 and 2)
+- Amazon Nova models
 
 ## Getting Started
 
@@ -22,7 +28,7 @@ To get started using this you need to do a few things:
 
 ### Get AWS credentials configured locally ☁️
 
-To be able to interact with [Amazon Bedrock]() you need to have a set of AWS Credentials on the machine **Bedrust** will run on. The easiest way to get this set up, is by configuring the [AWS CLI](https://aws.amazon.com/cli/). Make sure to install the AWS CLI, and run the `aws configure` [command](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) to set your credentials.
+To be able to interact with [Amazon Bedrock](https://aws.amazon.com/bedrock/) you need to have a set of AWS Credentials on the machine **Bedrust** will run on. The easiest way to get this set up, is by configuring the [AWS CLI](https://aws.amazon.com/cli/). Make sure to install the AWS CLI, and run the `aws configure` [command](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) to set your credentials.
 
 To verify if you have your AWS credentials set correctly, you can run `aws sts get-caller-identity`:
 ```bash
@@ -69,7 +75,7 @@ cargo install bedrust
 ```
 This will install the compiled binary into your `$CARGO_HOME/bin` directory. If you have the `$PATH` set up correctly you should be able to run it now. But before you do ...
 
-Let's initialize the configuration. Because **bedrust** uses two configuration files (`bedrust_config.ron` and `model_config.ron`) they (along with some other resources) need to be stored inside of your `$HOME/.config/bedrust` directory. *Now*, you can do this manually, but we have a feature to do it for you. Just run:
+Let's initialize the configuration. Because **bedrust** uses a configuration file (`bedrust_config.ron`) it (along with some other resources) needs to be stored inside of your `$HOME/.config/bedrust` directory. *Now*, you can do this manually, but we have a feature to do it for you. Just run:
 ```
 bedrust --init
 ```
@@ -85,12 +91,15 @@ Or if you wish to use the default model (the one defined during `--init` / in yo
 
 ## Usage
 ```bash
-Usage: bedrust [OPTIONS] --model-id <MODEL_ID>
+A command line tool to invoke and work with Large Language models on AWS, using Amazon Bedrock
+
+Usage: bedrust [OPTIONS]
 
 Options:
       --init
-  -m, --model-id <MODEL_ID>  [possible values: llama270b, cohere-command, claude-v2, claude-v21, claude-v3-sonnet, claude-v3-haiku, jurrasic2-ultra, titan-text-express-v1, mixtral8x7b-instruct, mistral7b-instruct, mistral-large]
+  -m, --model-id <MODEL_ID>  [possible values: llama270b, llama31405b-instruct, llama3170b-instruct, llama318b-instruct, cohere-command, claude-v2, claude-v21, claude-v3-opus, claude-v3-sonnet, claude-v3-haiku, claude-v35-sonnet, claude-v352-sonnet, claude-v35-haiku, jurrasic2-ultra, titan-text-express-v1, mixtral8x7b-instruct, mistral7b-instruct, mistral-large, mistral-large2, nova-micro, nova-lite, nova-pro]
   -c, --caption <CAPTION>
+  -s, --source <SOURCE>
   -x
   -h, --help                 Print help
   -V, --version              Print version
@@ -132,12 +141,31 @@ Here is an example of the output:
 
 Additionally you can customize captioning *prompt* and *supported image file formats* by editing the `bedrust_config.ron` file in the root of this project.
 
+## ⚠️  BETA FEATURE - Source Code analysis
+
+You can now point Bedrust to a directory containing some source code. This will allow you to discuss your code repository in context, and it can provide you with code suggestions, improvements, and further development. 
+
+> *Note:* Since this is a beta feature, it has it's limitations. For example, it is not able to handle really big code bases. And because it sends your entire code base into the context, it may cost you significantly more.
+
+```bash
+bedrust --source ~/workspace/repos/your_code_repo
+```
+
+## ⚠️  BETA FEATURE - Chat saving, recalling and export
+
+![screenshot of the chat export feature](/img/chat_export.png)
+
+As of version 0.8.2 you can now save your conversations, recall them at a later time, and even export them as nice HTML files. This feature is still in *heavy beta*, so expect things to break and functionality to change.
+
+The way this works is, when you enter `/s` as a chat command, Bedrust saves your conversation inside of `~/.config/bedrust/chats` as a `.json` file. This fill will contain a generated summary and a title for the conversation. To recall the conversation you can just type `/r` as a chat command, and you will be able to select any of the saved ones.
+
+To export your conversation to HTML, just run `/h`. This will create a file called `conversation.html` in the current directory. I have not yet implemented a feature to choose where to save this file, so for the time being it's just like this. (It's in beta afterall 😅).
+
 ## Configuration files 
 
-There are two important configuration files that ship with **bedrust**:
+There is one important configuration file that ship with **bedrust**:
 
 - `bedrust_config.ron` - stores configuration parameters related to the application itself.
-- `model_config.ron` - stores configuration parameters related to the LLMs. Things like max tokens, temperature, top_p, top_k, etc.
 
 They *need* to be in your `$HOME/.config/bedrust/` directory. The application will warn you if they do not exist, and fail to run. You can create them automatically by running `bedrust --init`
 
