@@ -1,3 +1,6 @@
+pub mod converse;
+pub mod converse_stream;
+
 use anyhow::{anyhow, Result};
 use aws_sdk_bedrock::{
     self,
